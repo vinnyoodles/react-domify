@@ -40,7 +40,7 @@ var styles = {
 	}
 };
 
-function transform(obj, fromRecur, comma) {
+function transform(obj, withHeaders, fromRecur, comma) {
 
 	var tag = fromRecur ? 'span' : 'div';
 	var nextLevel = (fromRecur || 0) + 1;
@@ -70,17 +70,19 @@ function transform(obj, fromRecur, comma) {
 				// arrays
 				else if (Array.isArray(obj)) {
 
+						var arrayHeader = withHeaders ? 'Array: ' : '';
+
 						if (!obj.length) {
-							return React.createElement(tag, { style: styles.empty }, 'Array: []');
+							return React.createElement(tag, { style: styles.empty }, arrayHeader + '[]');
 						}
 
-						children.push(React.createElement(tag, { key: '__array:open__', style: styles.array }, 'Array: ['));
+						children.push(React.createElement(tag, { key: '__array:open__', style: styles.array }, arrayHeader + '['));
 
 						for (var i = 0; i < obj.length; i++) {
 							children.push(React.createElement(
 								'div',
 								{ key: 'i' + i, style: { paddingLeft: '20px' } },
-								transform(obj[i], nextLevel, i < obj.length - 1)
+								transform(obj[i], withHeaders, nextLevel, i < obj.length - 1)
 							));
 						}
 
@@ -90,13 +92,14 @@ function transform(obj, fromRecur, comma) {
 					else if (obj && typeof obj === 'object') {
 
 							var len = Object.keys(obj).length;
+							var objectHeader = withHeaders ? 'Object: ' : '';
 
 							if (fromRecur && !len) {
-								return React.createElement(tag, { style: styles.empty }, 'Object: {}');
+								return React.createElement(tag, { style: styles.empty }, objectHeader + '{}');
 							}
 
 							if (fromRecur) {
-								children.push(React.createElement(tag, { key: '__object:open__', style: styles.object }, 'Object: {'));
+								children.push(React.createElement(tag, { key: '__object:open__', style: styles.object }, objectHeader + '{'));
 							}
 
 							for (var key in obj) {
@@ -110,7 +113,7 @@ function transform(obj, fromRecur, comma) {
 											key,
 											':'
 										),
-										transform(obj[key], nextLevel)
+										transform(obj[key], withHeaders, nextLevel)
 									));
 								}
 							}
@@ -132,10 +135,11 @@ var DOMify = React.createClass({
 	displayName: 'DOMify',
 
 	render: function render() {
+		var withHeaders = this.props.withHeaders === undefined ? true : this.props.withHeaders;
 		return React.createElement(
 			'div',
 			{ className: this.props.className, style: this.props.style },
-			transform(this.props.value)
+			transform(this.props.value, withHeaders)
 		);
 	}
 });
